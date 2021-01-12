@@ -18,17 +18,19 @@
 #     required columns
 #       'Player Number' - the number of the player
 #   awayCode - the team code for the home team
-# dependencies
-#   tidyverse
 
 mergeGameBatterRoster <- function(game, homeRoster, homeCode, awayRoster, awayCode) {
   # need to split the game into teams at bat
-  home <- game %>% 
-    filter(at_bat == homeCode) %>% 
-    left_join(homeRoster, by=c("batter" = "Player Number"))
-  away <- game %>% 
-    filter(at_bat == awayCode) %>% 
-    left_join(awayRoster, by=c("batter" = "Player Number"))
+  home <- left_join(
+    filter(game, game$at_bat == homeCode),
+    homeRoster,
+    by=c("batter" = "Player Number")
+  )
+  away <- left_join(
+    filter(game, game$at_bat == awayCode),
+    awayRoster,
+    by=c("batter" = "Player Number")
+  )
   rbind(home, away)
 }
 
