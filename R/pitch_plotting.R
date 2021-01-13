@@ -7,15 +7,16 @@
 # plotPitches
 # funciton will plot all the pitches supplied in the input, given the df has the 
 # necessary columns
-# inputs - the data to plot
-#   df with defined columns:
+# inputs  
+#   data - df with defined columns:
 #     x
 #     y
 #     gen_code (general result code) - one of these things:
 #       Strike/Foul, Ball, Bunt, Hit, Ball In Play Out
+#   dotSize - the size of the dot (int, default 5) 
 # dependencies: 
 #   ggplot2
-plotPitches <- function(data) {
+plotPitches <- function(data, dotSize=3) {
   
   color_values = c('Red', 'Blue', 'Green', 'Yellow', 'Brown')
   color_breaks = c('Strike/Foul','Ball','Bunt','Hit','Ball In Play Out')
@@ -30,8 +31,30 @@ plotPitches <- function(data) {
     scale_y_reverse(limits = c(200, -50)) +
     scale_color_manual(values=color_values, breaks=color_breaks) +
     coord_fixed() +
-    geom_point(aes(x=x, y=y, color=gen_code), size=5) +
+    geom_point(aes(x=x, y=y, color=gen_code), size=dotSize) +
     labs(color='') + 
     theme_void() 
+}
+
+
+# getGenCode
+# add the generic pitch result codes to the inputted data frame
+# inputs
+#   code - code from codebook to be generalized
+getGenCode <- function(code) {
+  
+  # define subsets of the codes that relate to a generic code
+  strikefoul_codes = c('STRIKE', 'KL', 'KS', 'S/M', 'FOUL', 'FOUL/O', 'SSB')
+  ball_codes = c('BALL', 'W','HBP', 'WP')
+  bunt_codes = c('B', 'SacB','B/O', 'B/FOUL', 'B/M')
+  hit_codes = c('S', 'S/FC', '2B', 'TR', 'HR')
+  ballinplayout_codes = c('GO', 'PO', 'FO', 'LO', 'SacF', 'DP', 'TP', 'IH', 'FP', 'OBR')
+  
+  if (code %in% strikefoul_codes ) {return('Strike/Foul')}
+  if (code %in% ball_codes) {return('Ball')}
+  if (code %in% bunt_codes) {return('Bunt')}
+  if (code %in% hit_codes) {return('Hit')}
+  if (code %in% ballinplayout_codes) {return('Ball In Play Out')}
+  return('Other')
 }
 
