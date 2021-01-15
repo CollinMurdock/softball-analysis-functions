@@ -8,7 +8,6 @@
 removeDirContents <- function(dir='.', pattern='*') {
 	files <- list.files(dir, pattern=pattern)
 	for (f in files) {
-	  print(f)
 		file.remove(paste0(dir, '/', f))
 	}
 }
