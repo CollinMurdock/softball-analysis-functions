@@ -68,14 +68,14 @@ getGenCode <- function(code) {
 #	   see plotPitches function docs for variable reqs
 #   directory - the directory where the images to be saved to
 #	        default: the current working directory	
-plotPitchesByCount <- function(data, directory='') {
+plotPitchesByCount <- function(data, directory='.') {
   for (b in 0:3) {
     for (s in 0:2) {
       # loop through all possible counts
       # create spray chart filtered by count
       p <- plotPitches(filter(data, data$balls == b, data$strikes == s)) +
         labs(title=sprintf('Vierstra Pitches on Count %s - %s', b, s))
-      ggsave(filename = paste0(directory, sprintf('count%s-%s.png',b,s)),
+      ggsave(filename = paste0(directory, sprintf('/count%s-%s.png',b,s)),
              plot = p,
              device = 'png')
     }
