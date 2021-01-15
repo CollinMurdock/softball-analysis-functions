@@ -58,3 +58,39 @@ getGenCode <- function(code) {
   return('Other')
 }
 
+
+# plotPitchesByCount
+# create and save a plot for each possible count
+# plots will be saved as png files in the given directory
+# NOTE the directory must already exist
+# inputs
+#   data - the data to be plotted
+#	   see plotPitches function docs for variable reqs
+#   directory - the directory where the images to be saved to
+#	        default: the current working directory	
+plotPitchesByCount <- function(data, directory='') {
+  for (b in 0:3) {
+    for (s in 0:2) {
+      # loop through all possible counts
+      # create spray chart filtered by count
+      plotPitches(filter(data, data$balls == b, data$strikes == s)) +
+        labs(title=sprintf('Vierstra Pitches on Count %s - %s', b, s))
+      ggsave(filename = paste0(directory, sprintf('count%s-%s.png',b,s)),
+             plot = p,
+             device = 'png')
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
