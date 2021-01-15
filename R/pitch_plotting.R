@@ -16,7 +16,7 @@
 #   dotSize - the size of the dot (int, default 5) 
 # dependencies: 
 #   ggplot2
-plotPitches <- function(data, dotSize=3) {
+plotPitches <- function(data, dotSize=3, includeLegend=TRUE) {
   
   color_values = c('Red', 'Blue', 'Green', 'Yellow', 'Brown')
   color_breaks = c('Strike/Foul','Ball','Bunt','Hit','Ball In Play Out')
@@ -33,9 +33,22 @@ plotPitches <- function(data, dotSize=3) {
     coord_fixed() +
     geom_point(aes(x=x, y=y, color=gen_code), size=dotSize) +
     labs(color='') + 
-    theme_void() 
+    theme_void() +
+    theme(
+      legend.position = ifelse(includeLegend, 'right', 'none')
+    )
 }
 
+# genCodeLegend
+# generate a plot containing the general code legend
+genCodeLegend <- function() {
+  color_values = c('Red', 'Blue', 'Green', 'Yellow', 'Brown')
+  color_breaks = c('Strike/Foul','Ball','Bunt','Hit','Ball In Play Out')
+  
+  plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+  legend("topleft", title="Legend", legend = color_breaks, lty=1, lwd=2, cex=1.25,
+         bty='n', col = color_values)
+}
 
 # getGenCode
 # add the generic pitch result codes to the inputted data frame
@@ -68,12 +81,14 @@ getGenCode <- function(code) {
 #	   see plotPitches function docs for variable reqs
 #   directory - the directory where the images to be saved to
 #	        default: the current working directory	
-plotPitchesByCount <- function(data, directory='.') {
+#   name - name of the pitcher (used in the title)
+plotPitchesByCount <- function(data, directory='.', name='') {
   for (b in 0:3) {
     for (s in 0:2) {
       # loop through all possible counts
       # create spray chart filtered by count
-      p <- plotPitches(filter(data, data$balls == b, data$strikes == s)) +
+      p <- plotPitches(filter(data, data$balls == b, data$strikes == s), 
+                       includeLegend = FALSE) +
         labs(title=sprintf('Vierstra Pitches on Count %s - %s', b, s))
       ggsave(filename = paste0(directory, sprintf('/count%s-%s.png',b,s)),
              plot = p,
