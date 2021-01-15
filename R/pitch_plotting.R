@@ -89,10 +89,11 @@ plotPitchesByCount <- function(data, directory='.', name='') {
       # create spray chart filtered by count
       p <- plotPitches(filter(data, data$balls == b, data$strikes == s), 
                        includeLegend = FALSE) +
-        labs(title=sprintf('Vierstra Pitches on Count %s - %s', b, s))
+        labs(title=sprintf('%s Pitches on Count %s - %s',name, b, s))
       ggsave(filename = paste0(directory, sprintf('/count%s-%s.png',b,s)),
              plot = p,
-             device = 'png')
+             device = 'png',
+             width=3)
     }
   }
 }
