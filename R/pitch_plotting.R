@@ -82,12 +82,12 @@ getGenCode <- function(code) {
 #   directory - the directory where the images to be saved to
 #	        default: the current working directory	
 #   name - name of the pitcher (used in the title)
-plotPitchesByCount <- function(data, directory='.', name='') {
+plotPitchesByCount <- function(data, func, directory='.', name='') {
   for (b in 0:3) {
     for (s in 0:2) {
       # loop through all possible counts
       # create spray chart filtered by count
-      p <- plotPitches(filter(data, data$balls == b, data$strikes == s), 
+      p <- func(filter(data, data$balls == b, data$strikes == s), 
                        includeLegend = FALSE) +
         labs(title=sprintf('%s Pitches on Count %s - %s',name, b, s))
       ggsave(filename = paste0(directory, sprintf('/count%s-%s.png',b,s)),
@@ -99,7 +99,60 @@ plotPitchesByCount <- function(data, directory='.', name='') {
 }
 
 
+# pitchResultsBarGraph
+# plot pitch results in a stacked bar graph grouped by count
+# inputs
+#   data - data to be used. 
+#     needed variables
+#       balls
+#       strikes
+#       gen_code
+pitchResultBarGraph <- function(data) {
+  
+  color_values = c('Red', 'Blue', 'Green', 'Yellow', 'Brown')
+  color_breaks = c('Strike/Foul','Ball','Bunt','Hit','Ball In Play Out')
+  
+  ggplot(data=mutate(data, count = sprintf('%s-%s', data$balls, data$strikes)) ) +
+    geom_bar(aes(x=count, fill=gen_code), position='stack') +
+    labs(title='Pitch Results by Count', y='', x='', fill='') + 
+    scale_fill_manual(values=color_values, breaks=color_breaks) +
+    theme_minimal() 
+}
 
+
+
+# plotPitchesSwing
+# plot pitches grouping by swing or no swing
+# inputs
+#   data
+#     necessary columns
+#       x
+#       y
+#       Swing - binary
+#   dotSize - size of dot default 3
+#   includeLegend - whether or not to include the legend
+plotPitchesSwing <- function(data, dotSize=3, includeLegend=TRUE) {
+  
+  
+  ggplot(data=data) + 
+    # box
+    geom_segment(aes(x=0, y=0, xend=100, yend=0)) +
+    geom_segment(aes(x=0, y=0, xend=0, yend=150)) +
+    geom_segment(aes(x=0, y=150, xend=100, yend=150)) +
+    geom_segment(aes(x=100, y=0, xend=100, yend=150)) +
+    scale_x_continuous(limits = c(-50, 150)) +
+    scale_y_reverse(limits = c(200, -50)) +
+    scale_color_manual(breaks=c(0, 1), 
+                        labels=c("No Swing", "Swing"),
+                        values = c('Red', 'Blue')) +
+    coord_fixed() +
+    geom_point(aes(x=x, y=y, color=as.factor(Swing)), size=dotSize) +
+    labs(color='') + 
+    theme_void() +
+    theme(
+      legend.position = ifelse(includeLegend, 'right', 'none')
+    )
+}
 
 
 
