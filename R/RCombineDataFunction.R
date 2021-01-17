@@ -21,12 +21,16 @@ full.data.list <- list.files(pattern = "MU", full.names = TRUE)
 read_fun = function(path) {
   test = read.csv(path)
   test$PitchLocation = 0
-  test$Swing = 1
   test
 }
 
 # This takes our list of data sets and applies the function to each one, combining the data
 combined.data <- map_dfr(full.data.list, read_fun)
+
+# Swing Codes
+swing_codes = c('FOUL', 'S/M', 'KS', 'GO', 'S', 'LO' ,'FOUL/O', '2B', 'S/FC', 'FO', 'PO', 'SSB',
+                'HR', 'SacF', 'DP', 'FP')
+
 
 # This creates a pitch location for each pitch using the x any y coordinates
 final <- combined.data %>% 
@@ -45,18 +49,15 @@ final <- combined.data %>%
          
          PitchLocation = ifelse((x >= 0 & x <= 33 & y > 100 & y <= 150), 7, PitchLocation),
          PitchLocation = ifelse((x > 33 & x <= 66 & y > 100 & y <= 150), 8, PitchLocation),
-         PitchLocation = ifelse((x > 66 & x <= 100 & y > 100 & y <= 150), 9, PitchLocation)) %>%
+         PitchLocation = ifelse((x > 66 & x <= 100 & y > 100 & y <= 150), 9, PitchLocation)) %>% 
   
-  mutate(Swing = ifelse(pitch_result == "BALL", 0 , Swing),
-         Swing = ifelse(pitch_result == "HBP", 0 , Swing),
-         Swing = ifelse(pitch_result == "W", 0 , Swing),
-         Swing = ifelse(pitch_result == "WP", 0 , Swing),
-         Swing = ifelse(pitch_result == "STRIKE", 0 , Swing),
-         Swing = ifelse(pitch_result == "KL", 0 , Swing),)
+  mutate(Swing = ifelse(pitch_result %in% swing_codes, 1, 0))
                          
 
+head(final)
 
 # Now we can save the final combined data set and download it to our pc
 # You can choose the file name, make sure to include ".csv"
 # It will save to the same location where you pulled the individual data sets from
 write.csv(final, file = "MU_combined_data.csv")
+
