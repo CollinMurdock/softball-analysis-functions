@@ -133,8 +133,8 @@ pitchResultBarGraph <- function(data) {
 #   includeLegend - whether or not to include the legend
 plotPitchesSwing <- function(data, dotSize=3, includeLegend=TRUE) {
   
-  
-  ggplot(data=data) + 
+  data %>% mutate(swingtype = ifelse(gen_code == 'Bunt', 2, Swing)) %>% 
+  ggplot() + 
     # box
     geom_segment(aes(x=0, y=0, xend=100, yend=0)) +
     geom_segment(aes(x=0, y=0, xend=0, yend=150)) +
@@ -142,11 +142,11 @@ plotPitchesSwing <- function(data, dotSize=3, includeLegend=TRUE) {
     geom_segment(aes(x=100, y=0, xend=100, yend=150)) +
     scale_x_continuous(limits = c(-50, 150)) +
     scale_y_reverse(limits = c(200, -50)) +
-    scale_color_manual(breaks=c(0, 1), 
-                        labels=c("No Swing", "Swing"),
-                        values = c('Red', 'Blue')) +
+    scale_color_manual(breaks=c(0, 1, 2), 
+                        labels=c("No Swing", "Swing", "Bunt"),
+                        values = c('Red', 'Blue', 'Green')) +
     coord_fixed() +
-    geom_point(aes(x=x, y=y, color=as.factor(Swing)), size=dotSize) +
+    geom_point(aes(x=x, y=y, color=as.factor(swingtype)), size=dotSize) +
     labs(color='') + 
     theme_void() +
     theme(

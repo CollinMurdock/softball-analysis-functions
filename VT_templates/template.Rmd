@@ -1,0 +1,154 @@
+---
+title: "NC State Scouting Report"
+author: "VT Softball Analytics Team"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: "left=1.5cm,right=1.5cm,top=1.5cm,bottom=1.5cm"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.width = 10)
+```
+
+```{r, warning = FALSE, message = FALSE}
+source('plot_functions.R')
+library(dplyr)
+library(kableExtra)
+
+# Import and clean data
+### MUST CHANGE FOLDER NAME - FOLDER SHOULD CONTAIN ONLY CSV FILES FOR SPECIFIC TEAM
+files = list.files(path = "./NCST", pattern = "*.csv", full.names = T)
+games = lapply(files, read.csv, stringsAsFactors = FALSE)
+games = lapply(games, select_columns)
+games = bind_rows(games)
+games = clean_data(games)
+
+# Select team - using one of the following two lines of code
+### MUST MANUALLY CHECK WHICH ONE TO USE TO GET THE RIGHT TEAM 
+#team = games$Team.at.Bat[1]
+team = games$Team.in.Field[1]
+
+### SOMETIMES XOS GIVES AN ODD GAME NAME - CHECK THIS IN THE TABLE AND MANUALLY ADJUST ANY ODD ONES
+# table(games$Name)
+games$Name[which(games$Name == '202003071615050')] = 'ND vs NC State GM 1'
+games$Name[which(games$Name == '202003110754550')] = 'Norfolk State vs NC State'
+```
+
+This report includes data from the following games:
+
+```{r}
+# Table of games
+temp_table = data.frame(Included.Games = unique(games$Name))
+kable(temp_table) %>%
+  kable_styling()
+```
+
+The game data include the following pitchers.  If the pitcher handedness is blank, we simply did not have their hand strength listed in the data.
+
+```{r}
+# Table of pitchers
+pitchers = unique(games$Pitcher[which(games$Team.in.Field == team)])
+hand = c()
+at_bats = c()
+for (i in 1:length(pitchers)){
+  hand = c(hand, games$Pitcher.Strength[which(games$Pitcher == pitchers[i])[1]])
+  at_bats = c(at_bats, sum(games$Pitcher == pitchers[i] & games$Count == '0-0'))
+}
+kable(data.frame(name = pitchers, handedness = hand, at.bats = at_bats), align = c('l','c','c')) %>%
+  kable_styling()
+```
+
+The game data include the following batters.  Note, plots are only provided for batters that had at least five at bats.
+
+```{r}
+# Table of batters
+batters = unique(games$Batter[which(games$Team.at.Bat == team)])
+hand = c()
+at_bats = c()
+for (i in 1:length(batters)){
+  hand = c(hand, games$Batter.Strength[which(games$Batter == batters[i])[1]])
+  at_bats = c(at_bats, sum(games$Batter == batters[i] & games$Count == '0-0'))
+}
+kable(data.frame(name = batters, handedness = hand, at.bats = at_bats), align = c('l','c','c')) %>%
+  kable_styling()
+```
+
+# Changeups by Pitcher
+
+We do not have any data on which pitches were changeups in these games.
+
+```{r, fig.height = 5, eval = FALSE}
+### IF CHANGEUP DATA IS AVAILABLE, CHANGE "eval = FALSE" to TRUE in the line above
+par(mar = c(8, 4, 4, 2), mfrow = c(1,2))
+changeup_barplot(games, team)
+```
+
+# Pitcher Spray Charts - `r pitchers[1]`
+
+```{r, fig.width = 10, fig.height = 5.5}
+### MUST MANUALLY CHECK HOW MANY PITCHERS THERE ARE, AND COPY THIS "PITCHER SPRAY CHART"
+### SECTION THE APPROPRIATE AMOUNT OF TIMES WHILE CHANGING INDEX
+pitch_scatterplot(games, pitchers[1])
+```
+
+# Pitcher Spray Charts - `r pitchers[2]`
+
+```{r, fig.width = 10, fig.height = 5.5}
+pitch_scatterplot(games, pitchers[2])
+```
+
+# Pitcher Spray Charts - `r pitchers[3]`
+
+```{r, fig.width = 10, fig.height = 5.5}
+pitch_scatterplot(games, pitchers[3])
+```
+
+# Pitch Result by Count - Pitchers
+
+```{r, eval = TRUE}
+make_barplot(games, team, type = 'pitcher')
+```
+
+# Pitch Result by Count - Batters
+
+```{r, eval = TRUE}
+make_barplot(games, team, type = 'batter')
+```
+
+# Bunt Analysis
+
+This team bunted `r sum(games$Team.at.Bat == team & games$Plot.Result == 'BUNT ATTEMPT') ` times in `r length(unique(games$Name))` games.  Details of the bunts are given in the following table.
+
+```{r}
+bunts = games[which(games$Team.at.Bat == team & games$Plot.Result == 'BUNT ATTEMPT'),]
+kable(data.frame(game = bunts[,'Name'], batter = bunts[,'Batter'],
+                 count = bunts[,'Count'], outs = bunts[,'Outs'],
+                 result = bunts[,'Strike.Type']), align = c('l', rep('c', 4))) %>%
+  kable_styling()
+```
+
+# Steal Analysis
+
+```{r}
+games$Stolen.Base.Lead[which(is.na(games$Stolen.Base.Lead))] = ''
+games$Caught.Stealing[which(is.na(games$Caught.Stealing))] = ''
+```
+
+In `r length(unique(games$Name))` games, this team had `r sum(games$Team.at.Bat == team & games$Stolen.Base.Lead != '')` successful steals and was caught stealing `r sum(games$Team.at.Bat == team & games$Caught.Stealing != '')` times.  Details of the steals are given in the following table.
+
+```{r}
+steals = games[which(games$Team.at.Bat == team & (games$Stolen.Base.Lead != '' | games$Caught.Stealing != '')),]
+df = data.frame(game = steals[,'Name'], stealer = steals[,'Stolen.Base.Lead.Runner'],
+                 count = steals[,'Count'], outs = steals[,'Outs'],
+                 base.stolen = steals[,'Stolen.Base.Lead'],
+                 caught.stealing = steals[,'Caught.Stealing'])
+df$stealer = as.character(df$stealer)
+df$stealer[which(df$caught.stealing == '2B')] = steals$Base.Runner.1st.Base[which(steals$Caught.Stealing == '2B')]
+df$stealer[which(df$caught.stealing == '3B')] = steals$Base.Runner.2nd.Base[which(steals$Caught.Stealing == '3B')]
+kable(df, align = c('l', rep('c', 6))) %>%
+  kable_styling()
+```
+
+
+
+
